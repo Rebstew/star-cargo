@@ -11,6 +11,7 @@ pub struct StarCargoEntry {
     pub floors: Vec<Floor>,
     pub upvotes: Vec<ObjectId>,  // MongoDB ID type
     pub downvotes: Vec<ObjectId>,  // MongoDB ID type
+    pub image_bytes: Vec<u8>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
