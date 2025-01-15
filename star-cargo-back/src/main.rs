@@ -8,6 +8,7 @@ use crate::models::StarCargoEntry;
 mod database;
 mod handlers;
 mod models;
+mod dto;
 
 struct AppState {
     bucket: GridFsBucket,                     // For GridFS operations
@@ -39,7 +40,8 @@ async fn main() -> std::io::Result<()> {
             .route("/entries", web::post().to(create_entry))
             .route("/entries", web::get().to(get_entries))
             .route("/popularEntries", web::get().to(handlers::get_popular_entries))
-            .route("/image", web::get().to(handlers::get_image))
+            .route("/image/{image_id}", web::get().to(handlers::get_image))
+            .route("/image", web::post().to(handlers::post_image))
     })
     .bind("127.0.0.1:8080")?
     .run()

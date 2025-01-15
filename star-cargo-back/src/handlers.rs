@@ -1,7 +1,9 @@
 use actix_web::{web, HttpResponse, Responder};
 use bson::{doc, oid::ObjectId, Bson};
+use futures_util::AsyncWriteExt;
 use mongodb::options::FindOptions;
 use crate::{models::StarCargoEntry, AppState};
+use crate::dto::PostImageDto;
 use futures_util::{stream::StreamExt, AsyncReadExt};
 
 pub async fn create_entry(
@@ -58,11 +60,43 @@ pub async fn get_popular_entries(app_state: web::Data<AppState>) -> HttpResponse
     HttpResponse::Ok().json(entries)
 }
 
+pub async fn get_default_ship_image() -> HttpResponse {
+    // Load the default image from the file system
+    let default_image = include_bytes!("../res/img/ship.jpeg");
+
+    // Return the default image as an HTTP response, cached for 1 day
+    HttpResponse::Ok()
+    .content_type("image/jpeg")
+    .append_header(("Cache-Control", "public, max-age=86400"))
+    .body(&default_image[..])
+}
+
+/// Retrieves an image from the server. The image id is passed as a path parameter.
+/// Returns the default image if the image is not found.
 pub async fn get_image(app_state: web::Data<AppState>, id: web::Path<String>) -> impl Responder {
     let file_id = id.into_inner();
 
+    // Log the request
+    println!("{}", format!("get_image -- Received image request, image id: {file_id}"));
+
     // Parse the file_id into an ObjectId
-    let object_id = Bson::ObjectId(ObjectId::parse_str(&file_id).unwrap());
+    let object_id = match ObjectId::parse_str(&file_id) {
+        Ok(id) => Bson::ObjectId(id),
+        Err(_) => return HttpResponse::BadRequest().body("Invalid image ID format"),
+    };
+
+    // Check if the file exists
+    let file_exists = match app_state.bucket.find(doc! { "_id": &object_id }, None).await {
+        Ok(cursor) => cursor.count().await > 0,
+        Err(_) => false,
+    };
+
+    println!("{}", format!("get_image -- File exists: {file_exists}"));
+
+    // If the file does not exist, return the default file, ship.jpeg
+    if !file_exists {
+        return get_default_ship_image().await;
+    }
 
     // Open a download stream for the file
     let mut download_stream: mongodb::GridFsDownloadStream = match app_state.bucket.open_download_stream(object_id).await {
@@ -76,8 +110,47 @@ pub async fn get_image(app_state: web::Data<AppState>, id: web::Path<String>) ->
         return HttpResponse::InternalServerError().body("Error reading file");
     }
 
+    let buflen = buffer.len();
+    println!("{}", format!("get_image -- Returning image, length: {buflen}"));
+
     // Return the file as an HTTP response
     HttpResponse::Ok()
     .content_type("image/png") // Adjust MIME type as needed
     .body(buffer)
+}
+
+/// Uploads an image to the server. The request body contains the image id (taken from the ship id) and the image bytes.
+pub async fn post_image(app_state: web::Data<AppState>, data: web::Json<PostImageDto>) -> impl Responder {
+    // Log the request
+    let data_name = &data.name;
+    let data_length = &data.image_bytes.len().to_string();
+
+    println!("{}", format!("post_image -- Received image upload request, image id: {data_name}, image length: {data_length}"));
+
+    // Reject if the supplied name is empty
+    if data.name.is_empty() {
+        return HttpResponse::BadRequest().body("Name cannot be empty");
+    }
+
+    // Reject if the data bytes is empty
+    if data.image_bytes.is_empty() {
+        return HttpResponse::BadRequest().body("Image bytes cannot be empty");
+    }
+
+    // Create a new file in the bucket
+    let upload_options = mongodb::options::GridFsUploadOptions::builder()
+        .metadata(doc! { "name": &data.name })
+        .build();
+    let mut upload_stream = app_state.bucket.open_upload_stream(&data.name, upload_options);
+
+    // Read the payload into a buffer
+    let mut buffer = Vec::new();
+    buffer.extend_from_slice(&data.image_bytes);
+
+    // Write the buffer to the file
+    if let Err(_) = upload_stream.write_all(&buffer).await {
+        return HttpResponse::InternalServerError().body("Error writing file");
+    }
+
+    HttpResponse::Created().json(&data.name)
 }
