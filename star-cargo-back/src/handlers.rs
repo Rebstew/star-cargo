@@ -48,10 +48,17 @@ pub async fn get_popular_entries(app_state: web::Data<AppState>) -> HttpResponse
     let mut cursor = app_state.collection.find(None, find_options).await.unwrap();
     let mut entries: Vec<StarCargoEntry> = Vec::new();
 
+    println!("get_popular_entries -- Found entries, iterating...");
+
     while let Some(result) = cursor.next().await {
         match result {
-            Ok(entry) => entries.push(entry),
-            Err(e) => return HttpResponse::InternalServerError().json(e.to_string()),
+            Ok(entry) => {
+                println!("get_popular_entries -- Found entry");
+                entries.push(entry)
+            },
+            Err(e) => {
+                eprintln!("get_popular_entries -- Found error {e}");
+            },
         }
     }
 

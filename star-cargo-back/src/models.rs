@@ -4,14 +4,13 @@ use bson::oid::ObjectId;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StarCargoEntry {
     #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<ObjectId>,  // MongoDB ID type
+    pub _id: Option<ObjectId>,  // MongoDB ID type
     pub name: String,
     pub description: String,
     pub comments: Vec<Comment>,
     pub floors: Vec<Floor>,
     pub upvotes: Vec<ObjectId>,  // MongoDB ID type
     pub downvotes: Vec<ObjectId>,  // MongoDB ID type
-    pub image_bytes: Vec<u8>,
     pub creation_date: String,
 }
 

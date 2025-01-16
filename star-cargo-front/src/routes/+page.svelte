@@ -1,4 +1,6 @@
 <script>
+	import { PUBLIC_SERVER_PROTOCOL, PUBLIC_SERVER_URL } from '$env/static/public';
+
 	let { data } = $props();
 </script>
 
@@ -15,10 +17,12 @@
     <div class="chart-grid">
         {#each data.popularCharts as popularChart}
         <div class="chart-card">
-            <img src="assets/images/ship.jpg" alt="Ship image">
+            <img src="{PUBLIC_SERVER_PROTOCOL}://{PUBLIC_SERVER_URL}/image/{popularChart.id}" alt="Representation of the {popularChart.name}">
             <h4>{popularChart.name}</h4>
             <p>{popularChart.description}</p>
-            <a href="chart/{popularChart.id}" class="cta-button">Voir le schéma</a>
+            <a href="chart/{popularChart.id}" class="cta-button">Chart details</a>
+            <p>Created on {popularChart.creation_date}</p>
+            <p>Id (for debug): {popularChart.id}</p>
         </div>
         {/each}
     </div>

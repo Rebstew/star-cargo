@@ -28,6 +28,8 @@ async fn main() -> std::io::Result<()> {
     let bucket = db.gridfs_bucket(bucket_options);
     let collection: Collection<StarCargoEntry> = db.collection("entries");
 
+    println!("Connected to MongoDB and got the entries collection, it contains {} entries", collection.count_documents(None, None).await.unwrap());
+
     let app_state = web::Data::new(AppState {
         bucket,
         collection,
