@@ -1,5 +1,6 @@
 <script>
 	import { PUBLIC_SERVER_PROTOCOL, PUBLIC_SERVER_URL } from '$env/static/public';
+	import ChartSimple from '../compo/ChartSimple.svelte';
 
 	let { data } = $props();
 </script>
@@ -16,14 +17,7 @@
     <h3>Most popular charts</h3>
     <div class="chart-grid">
         {#each data.popularCharts as popularChart}
-        <div class="chart-card">
-            <img src="{PUBLIC_SERVER_PROTOCOL}://{PUBLIC_SERVER_URL}/image/{popularChart.id}" alt="Representation of the {popularChart.name}">
-            <h4>{popularChart.name}</h4>
-            <p>{popularChart.description}</p>
-            <a href="chart/{popularChart.id}" class="cta-button">Chart details</a>
-            <p>Created on {popularChart.creation_date}</p>
-            <p>Id (for debug): {popularChart.id}</p>
-        </div>
+        <ChartSimple data={popularChart} />
         {/each}
     </div>
 </section>
