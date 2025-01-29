@@ -1,0 +1,1 @@
+<h2>View a chart</h2>

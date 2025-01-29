@@ -5,12 +5,16 @@
 	let { data } = $props();
 </script>
 
+<svelte:head>
+    <title>Star Cargo Grid</title>
+</svelte:head>
+
 <div class="main-content">
     <h2>Star Cargo</h2>
 
     <p>Besoin d'optimiser votre cargo bla bla bla. StarcarGo grid est fait pour vous ! 
         Créez votre Schéma sur le vaisseau de vos rêves bla bla bla.</p>
-    <a href="chartEdit" class="cta-button">Create your first chart</a>
+    <a href="chart/edit" class="cta-button">Create your first chart</a>
 </div>
 
 <section class="chart-section">

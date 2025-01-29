@@ -1,6 +1,7 @@
 <script>
 	import { PUBLIC_SERVER_PROTOCOL, PUBLIC_SERVER_URL } from "$env/static/public";
     import Time from "svelte-time";
+	import UpvoteProgress from "./UpvoteProgress.svelte";
 
 	let { data } = $props();
 
@@ -13,7 +14,9 @@
     <img src="{PUBLIC_SERVER_PROTOCOL}://{PUBLIC_SERVER_URL}/image/{data.id}" alt="Representation of the {data.name}">
     <h4>{data.name}</h4>
     <p>{data.description}</p>
-    <a href="chart/{data.id}" class="cta-button">Chart details</a>
-    <p>Created <Time title="{creation_date_formatted}" timestamp={data.creation_date} relative/></p>
+    <a href="chart/view/{data.id}" class="cta-button">Chart details</a>
+    <p>Created <Time title={creation_date_formatted} timestamp={data.creation_date} relative/></p>
+    <p><UpvoteProgress upvotes={data.upvotes} downvotes={data.downvotes}/></p>
+    <a href='chart/view/{data.id}#comments'>{data.comments.length} Commments</a>
     <p>Id (for debug): {data.id}</p>
 </div>
